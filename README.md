@@ -30,7 +30,7 @@ BloodBridge is a next-gen, division-aware lifesaving platform that unifies donor
 
 ## 🔐 Demo Admin Access
 
-- 👤 **Email:** foysal@m.com  
+- 👤 **Email:** admin@bloodbridge.com  
 - 🔑 **Password:** 123456  
 *(Use the seeded admin account to explore moderation, eligibility toggles, and stats.)*
 
@@ -93,7 +93,7 @@ src/
 2. **Configure Firebase + API**
    ```
    VITE_apiKey=...
-   VITE_backend_url=http://localhost:5001
+   VITE_backend_url=http://localhost:5173
    ```
 3. **Run**
    ```bash
@@ -102,7 +102,7 @@ src/
 4. **Server**
    ```bash
    cd ../BloodBridge_Server
-   npm install && npm run start
+   npm install && node index.js
    ```
 
 ---
@@ -141,9 +141,8 @@ src/
 
 ## 📞 Contact
 
-**Developer:** Foysal Munsy  
-**Email:** munsy.foysal613@gmail.com  
-**Location:** Dhaka, Bangladesh
+**Developer:** Md Forhad Hasan & Muhammad Milon Mia  
+**Email:** forhadhasan1007@gmail.com & mmilon82814@gmail.com 
 
 ---
 
