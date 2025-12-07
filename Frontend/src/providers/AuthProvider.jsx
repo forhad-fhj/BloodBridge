@@ -1,101 +1,85 @@
-import {
-  createUserWithEmailAndPassword,
-  deleteUser,
-  getAuth,
-  GoogleAuthProvider,
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  signInWithPopup,
-  signOut,
-  updateProfile,
-} from "firebase/auth";
 import { createContext, useEffect, useState } from "react";
-import app from "../firebase/firebase.config";
 import useAxiosPublic from "../hooks/axiosPublic";
+import useAxiosSecure from "../hooks/useAxiosSecure";
 
 export const AuthContext = createContext();
 
 const AuthProvider = ({ children }) => {
-  const auth = getAuth(app);
   const axiosPublic = useAxiosPublic();
-  const [user, setUser] = useState({});
+  const axiosSecure = useAxiosSecure();
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const createUser = (email, password) => {
-    return createUserWithEmailAndPassword(auth, email, password);
-  };
-
-  const signIn = (email, password) => {
-    return signInWithEmailAndPassword(auth, email, password);
-  };
-
-  const googleProvider = new GoogleAuthProvider();
-
-  const googleSignIn = () => {
-    return signInWithPopup(auth, googleProvider);
-  };
-
-  const updateUser = (userInfo) => {
-    return updateProfile(auth.currentUser, userInfo);
-  };
-
-  const removeUser = (user) => {
-    return deleteUser(user);
-  };
-
-  const logOut = () => {
-    return signOut(auth);
-  };
-
-  // useEffect(() => {
-  //   const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-  //     console.log("🚀 ~ unsubscribe ~ currentUser:", currentUser);
-  //     setUser(currentUser);
-  //     if (currentUser) {
-  //       axiosPublic
-  //         .post("/add-user", {
-  //           email: currentUser.email,
-  //           role: "donor",
-  //           loginCount: 1,
-  //         })
-  //         .then((res) => {
-  //           setUser(currentUser);
-  //           console.log(res.data);
-  //         });
-  //     }
-
-  //     setLoading(false);
-  //   });
-  //   return () => {
-  //     unsubscribe();
-  //   };
-  // }, []);
-
+  // Check if user is logged in on mount
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      console.log("🚀 ~ unsubscribe ~ currentUser:", currentUser);
-      setUser(currentUser);
-
-      // Ensure a corresponding user document exists / is updated in the backend
-      if (currentUser?.email) {
-        axiosPublic
-          .post("/add-user", {
-            email: currentUser.email,
-            role: "donor", // backend will ignore this if user already exists
-            loginCount: 1,
-          })
-          .catch((err) => {
-            console.error("Failed to sync user with backend:", err);
-          })
-          .finally(() => {
-            setLoading(false);
-          });
-      } else {
+    const checkAuth = async () => {
+      try {
+        const res = await axiosSecure.get("/check-auth");
+        if (res.data.authenticated) {
+            setUser(res.data.user);
+        } else {
+            setUser(null);
+        }
+      } catch (error) {
+        console.error("Auth check failed", error);
+        setUser(null);
+      } finally {
         setLoading(false);
       }
+    };
+    checkAuth();
+  }, [axiosSecure]);
+
+  const createUser = async (email, password, name = "", otherData = {}) => {
+    // 1. Register user
+    const res = await axiosPublic.post("/add-user", {
+      email,
+      password,
+      name,
+      ...otherData
     });
-    return () => unsubscribe();
-  }, [auth, axiosPublic]);
+    // Optional: Auto login after creation? 
+    // For now we just return the result, user will redirect to login or we login here.
+    // Let's keep it defined by the caller, but often caller expects a promise.
+    return res;
+  };
+
+  const signIn = async (email, password) => {
+    const res = await axiosPublic.post("/login", { email, password });
+    if (res.data.user) {
+        setUser(res.data.user);
+    }
+    return res;
+  };
+
+  const logOut = async () => {
+    try {
+      await axiosSecure.post("/logout");
+      setUser(null);
+    } catch (error) {
+      console.error("Logout failed", error);
+    }
+  };
+
+  const updateUser = async (userInfo) => {
+    if (!user?._id && !user?.id) return;
+    const id = user._id || user.id;
+    // We assume userInfo contains fields to update
+    const res = await axiosSecure.patch(`/update-user/${id}`, userInfo);
+    // Refresh user data
+    if (res.status === 200) {
+       const userRes = await axiosSecure.get("/get-user");
+       setUser(userRes.data);
+    }
+    return res;
+  };
+
+  // Google Sign In - Removed for Session Auth migration as requested
+  // Implementing Google Auth with Session requires backend OAuth flow (Passport.js etc)
+  const googleSignIn = async () => {
+      console.warn("Google Sign In not implemented for Session Auth yet");
+      throw new Error("Google Sign In not available");
+  };
 
   const authInfo = {
     user,
@@ -106,7 +90,6 @@ const AuthProvider = ({ children }) => {
     logOut,
     googleSignIn,
     updateUser,
-    removeUser,
   };
 
   return (

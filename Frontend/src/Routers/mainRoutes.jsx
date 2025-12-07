@@ -1,27 +1,33 @@
-import { createBrowserRouter } from "react-router";
+import { createBrowserRouter, Navigate } from "react-router";
+import RoleBasedProfile from "../components/RoleBasedProfile";
+import RoleBasedRedirect from "../components/RoleBasedRedirect";
+import DashboardLayout from "../layouts/DashboardLayout";
 import RootLayout from "../layouts/RootLayout";
+import AddBlog from "../pages/adminDashboard/AddBlog";
+import AdminDashboard from "../pages/adminDashboard/AdminDashboard";
+import AllBloodDonationRequest from "../pages/adminDashboard/AllBloodDonationRequest";
+import AllUsers from "../pages/adminDashboard/AllUsers";
+import ContentManagement from "../pages/adminDashboard/ContentManagement";
+import Blog from "../pages/Blog";
+import BlogDetails from "../pages/BlogDetails";
+import BloodHelper from "../pages/BloodHelper";
+import CreateDonationRequest from "../pages/donorDashboard/CreateDonationRequest";
+import DonationRequest from "../pages/donorDashboard/DonationRequest";
+import DonorDashboard from "../pages/donorDashboard/DonorDashboard";
+import DonorRegister from "../pages/DonorRegister";
+import RecipientRegister from "../pages/RecipientRegister";
 import Error from "../pages/Error";
+import HelpCenter from "../pages/HelpCenter";
 import Home from "../pages/Home";
 import Login from "../pages/Login";
-import Register from "../pages/Register";
-import Dashboard from "../pages/dashboard/Dashboard";
-import Blog from "../pages/Blog";
-import DashboardLayout from "../layouts/DashboardLayout";
-import DonationRequest from "../pages/donorDashboard/DonationRequest";
-import CreateDonationRequest from "../pages/donorDashboard/CreateDonationRequest";
-import PrivateRoute from "./PrivateRoute";
-import AllUsers from "../pages/adminDashboard/AllUsers";
-import Profile from "../pages/dashboard/Profile";
-import AllBloodDonationRequest from "../pages/adminDashboard/AllBloodDonationRequest";
-import ContentManagement from "../pages/adminDashboard/ContentManagement";
-import AddBlog from "../pages/adminDashboard/AddBlog";
+import ReceiverDashboard from "../pages/receiverDashboard/ReceiverDashboard";
+import RegisterSelection from "../pages/RegisterSelection";
 import Request from "../pages/Request";
-import ViewDetails from "../pages/ViewDetails";
-import UpdateDonationRequest from "../pages/UpdateDonationRequest";
-import BlogDetails from "../pages/BlogDetails";
 import Search from "../pages/Search";
-import BloodHelper from "../pages/BloodHelper";
-import HelpCenter from "../pages/HelpCenter";
+import UpdateDonationRequest from "../pages/UpdateDonationRequest";
+import ViewDetails from "../pages/ViewDetails";
+import PrivateRoute from "./PrivateRoute";
+
 const mainRoutes = createBrowserRouter([
   {
     path: "/",
@@ -68,19 +74,36 @@ const mainRoutes = createBrowserRouter([
         path: "blood-helper",
         element: <BloodHelper />,
       },
-
       {
         path: "login",
         element: <Login></Login>,
       },
       {
         path: "registration",
-        element: <Register></Register>,
+        element: <RegisterSelection></RegisterSelection>,
+      },
+      {
+        path: "register/donor",
+        element: <DonorRegister></DonorRegister>,
+      },
+      {
+        path: "register/recipient",
+        element: <RecipientRegister></RecipientRegister>,
+      },
+      // Redirect old /dashboard to role-based dashboards
+      {
+        path: "dashboard",
+        element: (
+          <PrivateRoute>
+            <RoleBasedRedirect />
+          </PrivateRoute>
+        ),
       },
     ],
   },
+  // Admin Dashboard Routes
   {
-    path: "/dashboard",
+    path: "/admindashboard",
     element: (
       <PrivateRoute>
         <DashboardLayout></DashboardLayout>
@@ -90,15 +113,47 @@ const mainRoutes = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Dashboard></Dashboard>,
+        element: <AdminDashboard />,
       },
       {
         path: "profile",
-        element: <Profile />,
+        element: <RoleBasedProfile />,
       },
       {
         path: "all-users",
         element: <AllUsers />,
+      },
+      {
+        path: "all-blood-donation-request",
+        element: <AllBloodDonationRequest />,
+      },
+      {
+        path: "content-management",
+        element: <ContentManagement />,
+      },
+      {
+        path: "content-management/add-blog",
+        element: <AddBlog />,
+      },
+    ],
+  },
+  // Donor Dashboard Routes
+  {
+    path: "/donordashboard",
+    element: (
+      <PrivateRoute>
+        <DashboardLayout></DashboardLayout>
+      </PrivateRoute>
+    ),
+    errorElement: <Error></Error>,
+    children: [
+      {
+        index: true,
+        element: <DonorDashboard />,
+      },
+      {
+        path: "profile",
+        element: <RoleBasedProfile />,
       },
       {
         path: "my-donation-requests",
@@ -112,25 +167,38 @@ const mainRoutes = createBrowserRouter([
         path: "create-donation-request",
         element: <CreateDonationRequest />,
       },
+    ],
+  },
+  // Recipient Dashboard Routes
+  {
+    path: "/recipientdashboard",
+    element: (
+      <PrivateRoute>
+        <DashboardLayout></DashboardLayout>
+      </PrivateRoute>
+    ),
+    errorElement: <Error></Error>,
+    children: [
       {
-        // admin
-        path: "all-blood-donation-request",
-        element: <AllBloodDonationRequest />,
+        index: true,
+        element: <ReceiverDashboard />,
       },
       {
-        // admin
-        path: "content-management",
-        element: <ContentManagement />,
+        path: "profile",
+        element: <RoleBasedProfile />,
       },
       {
-        // admin
-        path: "content-management/add-blog",
-        element: <AddBlog />,
+        path: "my-donation-requests",
+        element: <DonationRequest />,
       },
-      // {
-      //   path: "blog",
-      //   element: <Blog></Blog>,
-      // },
+      {
+        path: "update-donation-request/:ID",
+        element: <UpdateDonationRequest />,
+      },
+      {
+        path: "create-donation-request",
+        element: <CreateDonationRequest />,
+      },
     ],
   },
 ]);
